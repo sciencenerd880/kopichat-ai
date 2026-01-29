@@ -4,8 +4,9 @@ Module B: Speech-to-Text Transcription
 This module provides speech-to-text transcription with multiple backends:
 
 Backends:
-- groq: Groq Whisper API (fast, recommended for Singlish)
-- gemini: Gemini Live API (experimental)
+- mlx: MLX Whisper (local, Apple Silicon optimized, recommended)
+- groq: Groq Whisper API (fast cloud API, good for Singlish)
+- gemini: Gemini Live API (experimental streaming)
 
 Features:
 - File-based transcription
@@ -17,6 +18,7 @@ import os
 import io
 import wave
 import asyncio
+import tempfile
 from typing import Optional, Literal
 
 import pyaudio
@@ -31,12 +33,17 @@ from src.config import get_client as get_gemini_client, load_env_file
 # ==============================================================================
 
 # Backend options
-Backend = Literal["groq", "gemini"]
-DEFAULT_BACKEND: Backend = "groq"
+Backend = Literal["mlx", "groq", "gemini"]
+DEFAULT_BACKEND: Backend = "mlx"  # Default to local MLX
 
-# Groq Whisper models
-GROQ_MODEL_TURBO = "whisper-large-v3-turbo"  # Faster
-GROQ_MODEL_LARGE = "whisper-large-v3"  # More accurate
+# MLX Whisper models (local)
+MLX_MODEL_TURBO = "mlx-community/whisper-large-v3-turbo"
+MLX_MODEL_MEDIUM = "mlx-community/whisper-medium-mlx"
+MLX_MODEL_SMALL = "mlx-community/whisper-small-mlx"
+
+# Groq Whisper models (cloud)
+GROQ_MODEL_TURBO = "whisper-large-v3-turbo"
+GROQ_MODEL_LARGE = "whisper-large-v3"
 
 # Gemini Live model
 GEMINI_LIVE_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025"
@@ -175,6 +182,122 @@ def transcribe_audio_bytes(
     
     return transcription
 
+
+# ==============================================================================
+# MLX Whisper Transcription (Local, Apple Silicon)
+# ==============================================================================
+
+# Global MLX model cache
+_mlx_model = None
+_mlx_model_name = None
+
+
+def get_mlx_model(model_name: str = MLX_MODEL_TURBO):
+    """Load or get cached MLX Whisper model."""
+    global _mlx_model, _mlx_model_name
+    
+    if _mlx_model is None or _mlx_model_name != model_name:
+        print(f"   Loading MLX model: {model_name}...")
+        print("   (First load may take a moment to download)")
+        import mlx_whisper
+        _mlx_model_name = model_name
+        # Model is loaded lazily on first transcription
+        _mlx_model = model_name
+    
+    return _mlx_model
+
+
+def transcribe_audio_bytes_mlx(
+    audio_data: bytes,
+    model: str = MLX_MODEL_TURBO,
+) -> str:
+    """Transcribe audio bytes using MLX Whisper (local)."""
+    import mlx_whisper
+    
+    # Write audio to temp file (mlx_whisper needs file path)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        f.write(audio_data)
+        temp_path = f.name
+    
+    try:
+        result = mlx_whisper.transcribe(
+            temp_path,
+            path_or_hf_repo=model,
+            # Anti-hallucination settings
+            condition_on_previous_text=False,  # Don't use previous text as context
+            compression_ratio_threshold=2.4,   # Reject high compression (hallucination indicator)
+            no_speech_threshold=0.6,           # Higher threshold to filter silence
+            hallucination_silence_threshold=0.5,  # Detect silence hallucinations
+        )
+        
+        text = result.get("text", "").strip()
+        
+        # Additional filter: reject common hallucination phrases when isolated
+        hallucination_phrases = [
+            "thank you", "thanks", "thank you for watching",
+            "thank you for listening", "bye", "goodbye",
+            "alright", "all right", "okay", "ok",
+            "you", "yeah", "yes", "no",
+            "please subscribe", "like and subscribe",
+        ]
+        
+        # If the entire text is just a hallucination phrase, return empty
+        if text.lower() in hallucination_phrases:
+            return ""
+        
+        return text
+    finally:
+        os.unlink(temp_path)
+
+
+def run_mlx_transcription(
+    chunk_duration: float = 3.0,  # Shorter chunks for faster response
+    model: str = MLX_MODEL_TURBO,
+) -> None:
+    """Run live transcription using MLX Whisper (local, Apple Silicon optimized)."""
+    print("\n" + "=" * 60)
+    print("📝 Live Transcription (MLX Whisper - Local)")
+    print("=" * 60)
+    print(f"   Model: {model}")
+    print(f"   Chunk duration: {chunk_duration}s")
+    print("   Running locally on Apple Silicon 🍎")
+    print("\n   Speak into your microphone...")
+    print("   Press Ctrl+C to stop")
+    print("=" * 60 + "\n")
+    
+    pya = pyaudio.PyAudio()
+    mic_info = pya.get_default_input_device_info()
+    print(f"🎤 Using: {mic_info['name']}")
+    pya.terminate()
+    
+    # Pre-load model
+    get_mlx_model(model)
+    print()
+    
+    max_status_len = 50
+    
+    try:
+        while True:
+            status = f"🔴 Recording ({chunk_duration}s)..."
+            print(status, end="", flush=True)
+            
+            audio_data = record_chunk(chunk_duration)
+            
+            print(f"\r{'🔄 Transcribing...':<{max_status_len}}", end="", flush=True)
+            
+            try:
+                text = transcribe_audio_bytes_mlx(audio_data, model=model)
+                
+                if text.strip():
+                    print(f"\r{' ' * max_status_len}\r📝 {text.strip()}")
+                else:
+                    print(f"\r{' ' * max_status_len}\r   (silence)")
+            except Exception as e:
+                print(f"\r{' ' * max_status_len}\r❌ Error: {e}")
+    
+    except KeyboardInterrupt:
+        print(f"\r{' ' * max_status_len}\r")
+        print("🛑 Transcription stopped.")
 
 def run_groq_transcription(
     chunk_duration: float = 5.0,
@@ -355,25 +478,28 @@ def run_gemini_transcription() -> None:
 
 def run_live_transcription(
     backend: Backend = DEFAULT_BACKEND,
-    chunk_duration: float = 5.0,
+    chunk_duration: float = 3.0,
 ) -> None:
     """
     Run live speech-to-text transcription.
     
     Args:
-        backend: Which backend to use ("groq" or "gemini")
-        chunk_duration: For Groq, duration of each recording chunk
+        backend: Which backend to use ("mlx", "groq", or "gemini")
+        chunk_duration: Duration of each recording chunk (for mlx/groq)
     
     Usage:
-        >>> run_live_transcription(backend="groq")
-        >>> run_live_transcription(backend="gemini")
+        >>> run_live_transcription(backend="mlx")   # Local, Apple Silicon
+        >>> run_live_transcription(backend="groq")  # Cloud API
+        >>> run_live_transcription(backend="gemini")  # Streaming
     """
-    if backend == "groq":
+    if backend == "mlx":
+        run_mlx_transcription(chunk_duration=chunk_duration)
+    elif backend == "groq":
         run_groq_transcription(chunk_duration=chunk_duration)
     elif backend == "gemini":
         run_gemini_transcription()
     else:
-        raise ValueError(f"Unknown backend: {backend}. Use 'groq' or 'gemini'.")
+        raise ValueError(f"Unknown backend: {backend}. Use 'mlx', 'groq', or 'gemini'.")
 
 
 # ==============================================================================

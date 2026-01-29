@@ -43,7 +43,7 @@ def print_banner():
     ║                                                            ║
     ║   ☕ kopichat-ai - Audio AI Application                   ║
     ║                                                            ║
-    ║   Audio understanding (Gemini) + Speech-to-text (Groq)    ║
+    ║   Audio understanding (Gemini) + Speech-to-text (MLX)     ║
     ║                                                            ║
     ╚════════════════════════════════════════════════════════════╝
     """
@@ -61,8 +61,9 @@ def print_menu():
        transcribe <file>        - Transcribe audio to text
     
     🎙️  LIVE TRANSCRIPTION
-       live                     - Live speech-to-text (Groq Whisper)
-       live --gemini            - Live speech-to-text (Gemini Live)
+       live                     - Live speech-to-text (MLX local)
+       live --groq              - Live speech-to-text (Groq API)
+       live --gemini            - Live speech-to-text (Gemini)
        live_file <file>         - Transcribe audio file (Groq)
     
     🎤 RECORDING
@@ -120,13 +121,15 @@ def handle_transcribe(args: list) -> None:
 
 def handle_live(args: list) -> None:
     """Handle the live transcription command."""
-    # Parse backend from args
-    backend = "groq"  # default
+    # Parse backend from args (default to MLX for local processing)
+    backend = "mlx"  # default - local Apple Silicon
     for arg in args:
         if arg in ("--gemini", "-g", "gemini"):
             backend = "gemini"
         elif arg in ("--groq", "-q", "groq"):
             backend = "groq"
+        elif arg in ("--mlx", "-m", "mlx"):
+            backend = "mlx"
     
     try:
         run_live_transcription(backend=backend)
