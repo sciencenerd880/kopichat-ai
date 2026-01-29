@@ -1,25 +1,25 @@
-# ☕ kopichat-ai
+# kopichat-ai
 
 A modular Python application for **audio understanding**, **transcription**, and **real-time AI interaction**. Powered by Google Gemini, Groq Whisper, and Apple's MLX.
 
-## 🚀 Features
+## Features
 
-### 🎧 Audio Understanding (Gemini)
+### Audio Understanding (Gemini)
 - **Transcription & Analysis** - Convert audio to text and analyze content.
 - **Automatic Upload** - Handles small files (inline) and large files (File API) automatically.
 - Supports: MP3, WAV, AAC, OGG, FLAC, and more.
 
-### 🎙️ Live Transcription (Multi-Backend)
+### Live Transcription (Multi-Backend)
 - **MLX Whisper (Local)** - **Recommended for Mac.** Ultra-fast on-device transcription optimized for Apple Silicon (M1/M2/M3).
 - **Groq Whisper (Cloud)** - Lightning fast cloud-based transcription with excellent Singlish support.
 - **Gemini Live (Streaming)** - Real-time streaming transcription directly from Gemini.
 - **Anti-Hallucination** - Built-in filters to reduce "phantom speech" during silence.
 
-### 🎤 Recording Utility
+### Recording Utility
 - **High-Quality Recording** - Save microphone input to WAV files.
 - **Device Management** - List and select audio input devices.
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Python 3.11+
@@ -50,7 +50,7 @@ GEMINI_API_KEY=your_gemini_key
 GROQ_API_KEY=your_groq_key
 ```
 
-## 🎯 Usage
+## Usage
 
 ### Interactive Mode (Recommended)
 ```bash
@@ -96,7 +96,7 @@ python main.py record output.wav 10
 python main.py devices
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 kopichat-ai/
@@ -110,7 +110,7 @@ kopichat-ai/
 └── notebooks/              # Research & Experiments
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Component | Technology | Use Case |
 |-----------|------------|----------|
@@ -120,7 +120,7 @@ kopichat-ai/
 | **Analysis** | `google-genai` | Audio reasoning & understanding |
 | **Audio I/O** | `pyaudio` | Microphone & speaker handling |
 
-## 📝 Models Used
+## Models Used
 
 | Backend | Model | Default |
 |---------|-------|---------|
@@ -128,6 +128,6 @@ kopichat-ai/
 | **MLX** | `whisper-large-v3-turbo` | Local Real-time STT |
 | **Groq** | `whisper-large-v3-turbo` | Cloud Real-time STT |
 
-## 📄 License
+## License
 
 Apache 2.0 - See [LICENSE](LICENSE) for details.

@@ -144,7 +144,7 @@ def transcribe_file_groq(
     
     client = get_groq_client()
     
-    print(f"🎵 Transcribing (Groq): {file_path}")
+    print(f"Transcribing (Groq): {file_path}")
     print(f"   Model: {model}")
     
     with open(file_path, "rb") as file:
@@ -261,9 +261,9 @@ def transcribe_file_mlx(
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Audio file not found: {file_path}")
     
-    print(f"🎵 Transcribing (MLX): {file_path}")
+    print(f"Transcribing (MLX): {file_path}")
     print(f"   Model: {model}")
-    print("   Running locally on Apple Silicon 🍎")
+    print("   Running locally on Apple Silicon")
     
     # Pre-load model (cached)
     get_mlx_model(model)
@@ -303,20 +303,20 @@ def run_mlx_transcription(
 ) -> None:
     """Run live transcription using MLX Whisper (local, Apple Silicon optimized)."""
     print("\n" + "=" * 60)
-    print("📝 Live Transcription (MLX Whisper - Local)")
+    print("Live Transcription (MLX Whisper - Local)")
     print("=" * 60)
     print(f"   Model: {model}")
     print(f"   Chunk duration: {chunk_duration}s")
-    print("   Running locally on Apple Silicon 🍎")
+    print("   Running locally on Apple Silicon")
     if verbose:
-        print("   Verbose mode enabled 🔍")
+        print("   Verbose mode enabled")
     print("\n   Speak into your microphone...")
     print("   Press Ctrl+C to stop")
     print("=" * 60 + "\n")
     
     pya = pyaudio.PyAudio()
     mic_info = pya.get_default_input_device_info()
-    print(f"🎤 Using: {mic_info['name']}")
+    print(f"Microphone: {mic_info['name']}")
     pya.terminate()
     
     # Pre-load model
@@ -327,12 +327,12 @@ def run_mlx_transcription(
     
     try:
         while True:
-            status = f"🔴 Recording ({chunk_duration}s)..."
+            status = f"Recording ({chunk_duration}s)..."
             print(status, end="", flush=True)
             
             audio_data = record_chunk(chunk_duration)
             
-            print(f"\r{'🔄 Transcribing...':<{max_status_len}}", end="", flush=True)
+            print(f"\r{'Transcribing...':<{max_status_len}}", end="", flush=True)
             
             try:
                 start_t = time.time()
@@ -340,18 +340,18 @@ def run_mlx_transcription(
                 end_t = time.time()
                 
                 if text.strip():
-                    status_line = f"\r{' ' * max_status_len}\r📝 {text.strip()}"
+                    status_line = f"\r{' ' * max_status_len}\r{text.strip()}"
                     if verbose:
                         status_line += f" ({end_t - start_t:.2f}s)"
                     print(status_line)
                 else:
                     print(f"\r{' ' * max_status_len}\r   (silence)")
             except Exception as e:
-                print(f"\r{' ' * max_status_len}\r❌ Error: {e}")
+                print(f"\r{' ' * max_status_len}\rError: {e}")
     
     except KeyboardInterrupt:
         print(f"\r{' ' * max_status_len}\r")
-        print("🛑 Transcription stopped.")
+        print("Transcription stopped.")
 
 def run_groq_transcription(
     chunk_duration: float = 5.0,
@@ -361,20 +361,20 @@ def run_groq_transcription(
 ) -> None:
     """Run live transcription using Groq Whisper."""
     print("\n" + "=" * 60)
-    print("📝 Live Transcription (Groq Whisper)")
+    print("Live Transcription (Groq Whisper)")
     print("=" * 60)
     print(f"   Model: {model}")
     print(f"   Chunk duration: {chunk_duration}s")
     print(f"   Prompt: {prompt}")
     if verbose:
-        print("   Verbose mode enabled 🔍")
+        print("   Verbose mode enabled")
     print("\n   Speak into your microphone...")
     print("   Press Ctrl+C to stop")
     print("=" * 60 + "\n")
     
     pya = pyaudio.PyAudio()
     mic_info = pya.get_default_input_device_info()
-    print(f"🎤 Using: {mic_info['name']}\n")
+    print(f"Microphone: {mic_info['name']}\n")
     pya.terminate()
     
     # Status line length for proper clearing
@@ -383,13 +383,13 @@ def run_groq_transcription(
     try:
         while True:
             # Show recording status
-            status = f"🔴 Recording ({chunk_duration}s)..."
+            status = f"Recording ({chunk_duration}s)..."
             print(status, end="", flush=True)
             
             audio_data = record_chunk(chunk_duration)
             
             # Update status to transcribing
-            print(f"\r{'🔄 Transcribing...':<{max_status_len}}", end="", flush=True)
+            print(f"\r{'Transcribing...':<{max_status_len}}", end="", flush=True)
             
             try:
                 start_t = time.time()
@@ -398,18 +398,18 @@ def run_groq_transcription(
                 
                 # Clear the status line completely and print result
                 if text.strip():
-                    status_line = f"\r{' ' * max_status_len}\r📝 {text.strip()}"
+                    status_line = f"\r{' ' * max_status_len}\r{text.strip()}"
                     if verbose:
                         status_line += f" ({end_t - start_t:.2f}s)"
                     print(status_line)
                 else:
                     print(f"\r{' ' * max_status_len}\r   (silence)")
             except Exception as e:
-                print(f"\r{' ' * max_status_len}\r❌ Error: {e}")
+                print(f"\r{' ' * max_status_len}\rError: {e}")
     
     except KeyboardInterrupt:
         print(f"\r{' ' * max_status_len}\r")  # Clear any remaining status
-        print("🛑 Transcription stopped.")
+        print("Transcription stopped.")
 
 
 # ==============================================================================
@@ -429,7 +429,7 @@ async def run_gemini_transcription_async() -> None:
     async def listen_audio():
         nonlocal audio_stream
         mic_info = pya.get_default_input_device_info()
-        print(f"🎤 Using: {mic_info['name']}\n")
+        print(f"Microphone: {mic_info['name']}\n")
         
         audio_stream = await asyncio.to_thread(
             pya.open,
@@ -473,7 +473,7 @@ async def run_gemini_transcription_async() -> None:
                         
                         # Clear previous line and print updated text
                         clear_str = "\r" + " " * last_line_length + "\r"
-                        display_str = f"📝 {current_text}"
+                        display_str = f"{current_text}"
                         print(f"{clear_str}{display_str}", end="", flush=True)
                         last_line_length = len(display_str)
                 
@@ -486,7 +486,7 @@ async def run_gemini_transcription_async() -> None:
                         # Print final sentence and move to new line
                         final_text = "".join(text_buffer).strip()
                         clear_str = "\r" + " " * last_line_length + "\r"
-                        print(f"{clear_str}📝 {final_text}")
+                        print(f"{clear_str}{final_text}")
                         text_buffer = []
                         last_line_length = 0
     
@@ -504,7 +504,7 @@ async def run_gemini_transcription_async() -> None:
             config=config,
         ) as session:
             print("\n" + "=" * 60)
-            print("📝 Live Transcription (Gemini Live API)")
+            print("Live Transcription (Gemini Live API)")
             print("=" * 60)
             print(f"   Model: {GEMINI_LIVE_MODEL}")
             print("\n   Speak into your microphone...")
@@ -523,7 +523,7 @@ async def run_gemini_transcription_async() -> None:
         if audio_stream:
             audio_stream.close()
         pya.terminate()
-        print("\n\n🛑 Transcription stopped.")
+        print("\n\nTranscription stopped.")
 
 
 def run_gemini_transcription() -> None:
@@ -606,16 +606,16 @@ if __name__ == "__main__":
         try:
             result = transcribe_file(file_path)
             print("\n" + "=" * 60)
-            print("📜 Transcription:")
+            print("Transcription:")
             print("=" * 60)
             print(result)
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
     else:
         # Live transcription
         try:
             run_live_transcription(backend=backend)
         except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
+            print("\nGoodbye!")
         except TranscriptionError as e:
-            print(f"❌ {e}")
+            print(f"{e}")

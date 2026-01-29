@@ -58,8 +58,8 @@ def record_audio(
     
     Example:
         >>> record_audio("my_recording.wav", duration_seconds=10)
-        '🎙️ Recording for 10.0 seconds...'
-        '✅ Saved to: my_recording.wav'
+        'Recording for 10.0 seconds...'
+        'Saved to: my_recording.wav'
     """
     # Ensure output directory exists
     output_dir = os.path.dirname(output_file)
@@ -78,8 +78,8 @@ def record_audio(
                 "No microphone found. Please connect a microphone."
             )
         
-        print(f"🎤 Using: {mic_info['name']}")
-        print(f"🎙️  Recording for {duration_seconds:.1f} seconds...")
+        print(f"Using: {mic_info['name']}")
+        print(f"Recording for {duration_seconds:.1f} seconds...")
         
         # Open audio stream
         stream = pya.open(
@@ -129,7 +129,7 @@ def record_audio(
     file_size = os.path.getsize(output_file)
     file_size_kb = file_size / 1024
     
-    print(f"✅ Saved to: {output_file}")
+    print(f"Saved to: {output_file}")
     print(f"   Size: {file_size_kb:.1f} KB")
     print(f"   Format: WAV ({sample_rate}Hz, {channels}ch, 16-bit)")
     
@@ -156,7 +156,7 @@ def record_with_countdown(
     """
     import time
     
-    print(f"\n🎬 Recording will start in {countdown} seconds...")
+    print(f"\nRecording will start in {countdown} seconds...")
     
     for i in range(countdown, 0, -1):
         print(f"   {i}...")
@@ -174,7 +174,7 @@ def list_audio_devices() -> None:
     """
     pya = pyaudio.PyAudio()
     
-    print("\n📋 Available Audio Input Devices:")
+    print("\nAvailable Audio Input Devices:")
     print("-" * 50)
     
     default_idx = None
@@ -222,7 +222,7 @@ if __name__ == "__main__":
             try:
                 record_with_countdown(output_file, duration)
             except Exception as e:
-                print(f"❌ Error: {e}")
+                print(f"Error: {e}")
     else:
         print("\nUsage:")
         print("  python -m src.audio_recorder <output.wav> [duration_seconds]")

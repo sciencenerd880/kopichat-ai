@@ -102,7 +102,7 @@ def analyze_audio_inline(
     Returns:
         str: The model's response text.
     """
-    print(f"📤 Sending audio inline: {file_path}")
+    print(f"Sending audio inline: {file_path}")
     
     mime_type = get_audio_mime_type(file_path)
     
@@ -146,11 +146,11 @@ def analyze_audio_upload(
     Returns:
         str: The model's response text.
     """
-    print(f"📤 Uploading audio file: {file_path}")
+    print(f"Uploading audio file: {file_path}")
     
     # Upload the file
     uploaded_file = client.files.upload(file=file_path)
-    print(f"✅ Upload complete: {uploaded_file.name}")
+    print(f"Upload complete: {uploaded_file.name}")
     
     # Wait for file processing if needed
     if wait_for_processing:
@@ -160,14 +160,14 @@ def analyze_audio_upload(
                 raise TimeoutError(
                     f"File processing timed out after {max_wait_seconds}s"
                 )
-            print("⏳ Waiting for file processing...")
+            print("Waiting for file processing...")
             time.sleep(2)
             uploaded_file = client.files.get(name=uploaded_file.name)
         
         if uploaded_file.state.name == "FAILED":
             raise RuntimeError(f"File processing failed: {uploaded_file.name}")
         
-        print(f"✅ File processed: {uploaded_file.state.name}")
+        print(f"File processed: {uploaded_file.state.name}")
     
     # Generate content with the uploaded file
     response = client.models.generate_content(
@@ -220,7 +220,7 @@ def analyze_audio(
     file_size = os.path.getsize(file_path)
     file_size_mb = file_size / (1024 * 1024)
     
-    print(f"🎵 Analyzing audio: {file_path}")
+    print(f"Analyzing audio: {file_path}")
     print(f"   File size: {file_size_mb:.2f} MB")
     
     # Create client if not provided
@@ -282,11 +282,11 @@ if __name__ == "__main__":
         try:
             result = analyze_audio(audio_file, prompt)
             print("\n" + "=" * 60)
-            print("📝 Analysis Result:")
+            print("Analysis Result:")
             print("=" * 60)
             print(result)
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
     else:
         print("\nUsage:")
         print("  python -m src.audio_understanding <audio_file> [prompt]")

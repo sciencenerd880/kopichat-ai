@@ -41,7 +41,7 @@ def print_banner():
     banner = """
     ╔════════════════════════════════════════════════════════════╗
     ║                                                            ║
-    ║   ☕ kopichat-ai - Audio AI Application                   ║
+    ║   kopichat-ai - Audio AI Application                      ║
     ║                                                            ║
     ║   Audio understanding (Gemini) + Speech-to-text (MLX)     ║
     ║                                                            ║
@@ -56,11 +56,11 @@ def print_menu():
     Available Commands:
     ─────────────────────────────────────────────────────────────
     
-    📝 AUDIO ANALYSIS (Gemini)
+    AUDIO ANALYSIS (Gemini)
        analyze <file> [prompt]  - Analyze an audio file
        transcribe <file>        - Transcribe audio to text
     
-     🎙️  LIVE TRANSCRIPTION
+     LIVE TRANSCRIPTION
         live                     - Live STT (MLX local - default)
         live --groq              - Live STT (Groq API)
         live --gemini            - Live STT (Gemini)
@@ -72,11 +72,11 @@ def print_menu():
         live_file <file>           - Transcribe file (MLX local)
         live_file <file> --groq    - Transcribe file (Groq API)
     
-    🎤 RECORDING
+    RECORDING
        record <file> [duration] - Record audio from microphone
        devices                  - List audio input devices
     
-    ℹ️  OTHER
+    OTHER
        help                     - Show this menu
        quit / exit              - Exit the application
     
@@ -87,7 +87,7 @@ def print_menu():
 def handle_analyze(args: list) -> None:
     """Handle the analyze command."""
     if not args:
-        print("❌ Usage: analyze <audio_file> [prompt]")
+        print("Usage: analyze <audio_file> [prompt]")
         return
     
     file_path = args[0]
@@ -96,19 +96,19 @@ def handle_analyze(args: list) -> None:
     try:
         result = analyze_audio(file_path, prompt)
         print("\n" + "=" * 60)
-        print("📝 Analysis Result:")
+        print("Analysis Result:")
         print("=" * 60)
         print(result)
     except FileNotFoundError as e:
-        print(f"❌ File not found: {e}")
+        print(f"File not found: {e}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def handle_transcribe(args: list) -> None:
     """Handle the transcribe command."""
     if not args:
-        print("❌ Usage: transcribe <audio_file>")
+        print("Usage: transcribe <audio_file>")
         return
     
     file_path = args[0]
@@ -116,13 +116,13 @@ def handle_transcribe(args: list) -> None:
     try:
         result = transcribe_audio(file_path)
         print("\n" + "=" * 60)
-        print("📜 Transcription:")
+        print("Transcription:")
         print("=" * 60)
         print(result)
     except FileNotFoundError as e:
-        print(f"❌ File not found: {e}")
+        print(f"File not found: {e}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def handle_live(args: list) -> None:
@@ -158,9 +158,9 @@ def handle_live(args: list) -> None:
     try:
         run_live_transcription(backend=backend, model=model, verbose=verbose)
     except KeyboardInterrupt:
-        print("\n👋 Transcription ended.")
+        print("\nTranscription ended.")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def handle_live_file(args: list) -> None:
@@ -173,7 +173,7 @@ def handle_live_file(args: list) -> None:
     )
     
     if not args:
-        print("❌ Usage: live_file <audio_file> [--groq|--mlx] [--turbo|--medium|--small]")
+        print("Usage: live_file <audio_file> [--groq|--mlx] [--turbo|--medium|--small]")
         return
     
     file_path = args[0]
@@ -197,19 +197,19 @@ def handle_live_file(args: list) -> None:
         result = transcribe_file(file_path, backend=backend, model=model)
         backend_name = "Groq Whisper" if backend == "groq" else "MLX Whisper"
         print("\n" + "=" * 60)
-        print(f"📜 Transcription ({backend_name}):")
+        print(f"Transcription ({backend_name}):")
         print("=" * 60)
         print(result)
     except FileNotFoundError as e:
-        print(f"❌ File not found: {e}")
+        print(f"File not found: {e}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def handle_record(args: list) -> None:
     """Handle the record command."""
     if not args:
-        print("❌ Usage: record <output_file> [duration_seconds]")
+        print("Usage: record <output_file> [duration_seconds]")
         return
     
     output_file = args[0]
@@ -218,7 +218,7 @@ def handle_record(args: list) -> None:
     try:
         record_with_countdown(output_file, duration)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def handle_devices(args: list) -> None:
@@ -233,9 +233,9 @@ def run_interactive():
     # Check configuration
     try:
         get_client()
-        print("    ✅ API configuration verified\n")
+        print("    API configuration verified\n")
     except ConfigurationError as e:
-        print(f"    ⚠️  Configuration warning: {e}\n")
+        print(f"    Configuration warning: {e}\n")
     
     print_menu()
     
@@ -251,7 +251,7 @@ def run_interactive():
             args = parts[1:]
             
             if command in ("quit", "exit", "q"):
-                print("👋 Goodbye!")
+                print("Goodbye!")
                 break
             elif command == "help":
                 print_menu()
@@ -268,14 +268,14 @@ def run_interactive():
             elif command == "devices":
                 handle_devices(args)
             else:
-                print(f"❌ Unknown command: {command}")
+                print(f"Unknown command: {command}")
                 print("   Type 'help' for available commands.")
         
         except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
+            print("\nGoodbye!")
             break
         except EOFError:
-            print("\n👋 Goodbye!")
+            print("\nGoodbye!")
             break
 
 
@@ -304,7 +304,7 @@ def run_command_line():
         print_banner()
         print_menu()
     else:
-        print(f"❌ Unknown command: {command}")
+        print(f"Unknown command: {command}")
         print("   Run 'python main.py help' for usage.")
 
 

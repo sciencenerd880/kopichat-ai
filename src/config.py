@@ -112,9 +112,9 @@ if __name__ == "__main__":
     try:
         load_env_file()
         client = get_client()
-        print("✅ Configuration successful!")
+        print("Configuration successful!")
         print(f"   Audio Model: {AUDIO_MODEL}")
         print(f"   Live Model: {LIVE_MODEL}")
         print(f"   Inline Size Threshold: {INLINE_SIZE_THRESHOLD / (1024 * 1024):.0f}MB")
     except ConfigurationError as e:
-        print(f"❌ Configuration Error:\n{e}")
+        print(f"Configuration Error:\n{e}")
