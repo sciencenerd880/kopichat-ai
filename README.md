@@ -1,42 +1,34 @@
 # ☕ kopichat-ai
 
-A modular Python application for interacting with Google Gemini API for **audio understanding** and **real-time voice interaction**.
+A modular Python application for **audio understanding**, **transcription**, and **real-time AI interaction**. Powered by Google Gemini, Groq Whisper, and Apple's MLX.
 
 ## 🚀 Features
 
-### Module A: Audio Understanding
-- **Automatic input method selection** based on file size (inline vs. upload)
-- **Transcription** - Convert audio to text
-- **Analysis** - Describe, summarize, or analyze audio content
-- Supports: MP3, WAV, AAC, OGG, FLAC, and more
+### 🎧 Audio Understanding (Gemini)
+- **Transcription & Analysis** - Convert audio to text and analyze content.
+- **Automatic Upload** - Handles small files (inline) and large files (File API) automatically.
+- Supports: MP3, WAV, AAC, OGG, FLAC, and more.
 
-### Module B: Real-Time Voice Interaction
-- **Bidirectional audio streaming** with Gemini Live API
-- **Low-latency conversation** with natural voice activity detection
-- **Native audio output** for human-like responses
+### 🎙️ Live Transcription (Multi-Backend)
+- **MLX Whisper (Local)** - **Recommended for Mac.** Ultra-fast on-device transcription optimized for Apple Silicon (M1/M2/M3).
+- **Groq Whisper (Cloud)** - Lightning fast cloud-based transcription with excellent Singlish support.
+- **Gemini Live (Streaming)** - Real-time streaming transcription directly from Gemini.
+- **Anti-Hallucination** - Built-in filters to reduce "phantom speech" during silence.
 
-### Module C: Audio Recording Utility
-- **Record WAV audio** from microphone
-- **List audio devices** for troubleshooting
-- Simple CLI for quick recordings
+### 🎤 Recording Utility
+- **High-Quality Recording** - Save microphone input to WAV files.
+- **Device Management** - List and select audio input devices.
 
 ## 📦 Installation
 
 ### Prerequisites
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) package manager
-- PortAudio library (for pyaudio)
-
-```bash
-# Install PortAudio (macOS)
-brew install portaudio
-
-# Install PortAudio (Ubuntu/Debian)
-sudo apt-get install portaudio19-dev
-
-# Install PortAudio (Windows)
-# PyAudio wheels include portaudio, no extra install needed
-```
+- **System Libraries (macOS):**
+  ```bash
+  # Required for Audio I/O and Local Transcription
+  brew install portaudio ffmpeg
+  ```
 
 ### Setup
 
@@ -45,130 +37,96 @@ sudo apt-get install portaudio19-dev
 git clone https://github.com/your-username/kopichat-ai.git
 cd kopichat-ai
 
-# Create virtual environment
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
+# Create virtual environment and install dependencies
 uv sync
 ```
 
 ### Configuration
 
-1. Get your API key from [Google AI Studio](https://aistudio.google.com/apikey)
-2. Edit `.env` and add your key:
+Create a `.env` file in the root directory:
 
 ```bash
-GEMINI_API_KEY=your_actual_api_key_here
+GEMINI_API_KEY=your_gemini_key
+GROQ_API_KEY=your_groq_key
 ```
 
 ## 🎯 Usage
 
-### Interactive Mode
+### Interactive Mode (Recommended)
 ```bash
 python main.py
 ```
+This launches a premium CLI interface where you can run all commands.
 
-This launches an interactive prompt with all available commands.
+### Live Transcription Commands
 
-### Command Line
+```bash
+# Start local transcription (Apple Silicon optimized)
+python main.py live
+
+# Choose MLX model (turbo, medium, small)
+python main.py live --medium
+
+# Start Groq cloud transcription (Best for Singlish)
+python main.py live --groq
+
+# Start Gemini Live transcription
+python main.py live --gemini
+
+# Enable verbose mode (shows more details)
+python main.py live -v
+```
+
+### Other Commands
 
 ```bash
 # Analyze an audio file
-python main.py analyze recording.mp3 "Describe this audio"
+python main.py analyze interview.mp3 "Summarize this conversation"
 
-# Transcribe audio to text
-python main.py transcribe interview.wav
+# Transcribe a file using MLX (Local, Default)
+python main.py live_file recording.wav
 
-# Start real-time voice session
-python main.py live
+# Transcribe a file using Groq (Cloud API)
+python main.py live_file recording.wav --groq
 
-# Record audio from microphone
-python main.py record output.wav 10  # Record 10 seconds
+# Record 10 seconds of audio
+python main.py record output.wav 10
 
-# List audio input devices
+# List audio devices
 python main.py devices
 ```
-
-### Programmatic Usage
-
-```python
-from src.config import load_env_file
-from src.audio_understanding import analyze_audio, transcribe_audio
-from src.live_interaction import run_live_session
-from src.audio_recorder import record_audio
-
-# Load API key from .env
-load_env_file()
-
-# Analyze audio
-result = analyze_audio("podcast.mp3", "Summarize the main topics")
-print(result)
-
-# Transcribe audio
-transcript = transcribe_audio("meeting.wav")
-print(transcript)
-
-# Record audio
-record_audio("recorded.wav", duration_seconds=10)
-
-# Start live session (async)
-import asyncio
-asyncio.run(run_live_session())
-```
-
-## 🔐 Security
-
-This application follows security best practices:
-
-- ✅ **No hardcoded API keys** - Keys loaded from environment
-- ✅ **Environment-based configuration** - Uses `.env` file
-- ✅ **Clear error messages** - Helpful feedback for missing config
-- ✅ **`.env` in `.gitignore`** - Secrets never committed
 
 ## 📁 Project Structure
 
 ```
 kopichat-ai/
-├── .env                    # API keys (not committed)
-├── .gitignore              # Git ignore rules
-├── main.py                 # Main entry point & CLI
-├── pyproject.toml          # Project configuration
-├── requirements.txt        # Pip dependencies
+├── .env                    # API keys (Secrets)
+├── main.py                 # CLI & Application Entry
 ├── src/
-│   ├── __init__.py         # Package exports
-│   ├── config.py           # Configuration & security
-│   ├── audio_understanding.py  # Module A: File analysis
-│   ├── live_interaction.py     # Module B: Real-time voice
-│   └── audio_recorder.py       # Module C: Recording utility
-└── notebooks/              # Jupyter notebooks
+│   ├── config.py           # Global Config & Security
+│   ├── audio_understanding.py  # Gemini File Analysis
+│   ├── live_interaction.py     # MLX / Groq / Gemini STT
+│   └── audio_recorder.py       # Recording Utilities
+└── notebooks/              # Research & Experiments
 ```
 
-## 🔊 Audio Specifications
+## 🛠️ Technology Stack
 
-### Input (Microphone)
-- Format: 16-bit PCM
-- Sample Rate: 16kHz
-- Channels: Mono
-
-### Output (Speakers)
-- Format: 16-bit PCM
-- Sample Rate: 24kHz
-- Channels: Mono
-
-## 🛠️ Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `google-genai` | Google Gemini API SDK |
-| `pyaudio` | Audio I/O for real-time streaming |
+| Component | Technology | Use Case |
+|-----------|------------|----------|
+| **Core** | Python 3.11 | Logic & glue code |
+| **STT (Local)** | `mlx-whisper` | Fast local transcription on M-series Mac |
+| **STT (Cloud)** | `groq` | Ultra-low latency Whisper API |
+| **Analysis** | `google-genai` | Audio reasoning & understanding |
+| **Audio I/O** | `pyaudio` | Microphone & speaker handling |
 
 ## 📝 Models Used
 
-| Model | Use Case |
-|-------|----------|
-| `gemini-3-flash-preview` | Audio understanding & analysis |
-| `gemini-2.5-flash-native-audio-preview` | Real-time voice interaction |
+| Backend | Model | Default |
+|---------|-------|---------|
+| **Gemini** | `gemini-2.0-flash` | Analysis & Transcription |
+| **MLX** | `whisper-large-v3-turbo` | Local Real-time STT |
+| **Groq** | `whisper-large-v3-turbo` | Cloud Real-time STT |
 
 ## 📄 License
 

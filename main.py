@@ -60,11 +60,17 @@ def print_menu():
        analyze <file> [prompt]  - Analyze an audio file
        transcribe <file>        - Transcribe audio to text
     
-    🎙️  LIVE TRANSCRIPTION
-       live                     - Live speech-to-text (MLX local)
-       live --groq              - Live speech-to-text (Groq API)
-       live --gemini            - Live speech-to-text (Gemini)
-       live_file <file>         - Transcribe audio file (Groq)
+     🎙️  LIVE TRANSCRIPTION
+        live                     - Live STT (MLX local - default)
+        live --groq              - Live STT (Groq API)
+        live --gemini            - Live STT (Gemini)
+        
+        Live Options:
+        --turbo, --medium, --small - Select MLX model
+        --verbose, -v              - Show debug info
+        
+        live_file <file>           - Transcribe file (MLX local)
+        live_file <file> --groq    - Transcribe file (Groq API)
     
     🎤 RECORDING
        record <file> [duration] - Record audio from microphone
@@ -121,8 +127,18 @@ def handle_transcribe(args: list) -> None:
 
 def handle_live(args: list) -> None:
     """Handle the live transcription command."""
-    # Parse backend from args (default to MLX for local processing)
-    backend = "mlx"  # default - local Apple Silicon
+    from src.live_interaction import (
+        MLX_MODEL_TURBO, 
+        MLX_MODEL_MEDIUM, 
+        MLX_MODEL_SMALL
+    )
+    
+    # Defaults
+    backend = "mlx"
+    model = MLX_MODEL_TURBO
+    verbose = False
+    
+    # Parse options
     for arg in args:
         if arg in ("--gemini", "-g", "gemini"):
             backend = "gemini"
@@ -130,9 +146,17 @@ def handle_live(args: list) -> None:
             backend = "groq"
         elif arg in ("--mlx", "-m", "mlx"):
             backend = "mlx"
+        elif arg in ("--verbose", "-v"):
+            verbose = True
+        elif arg == "--medium":
+            model = MLX_MODEL_MEDIUM
+        elif arg == "--small":
+            model = MLX_MODEL_SMALL
+        elif arg == "--turbo":
+            model = MLX_MODEL_TURBO
     
     try:
-        run_live_transcription(backend=backend)
+        run_live_transcription(backend=backend, model=model, verbose=verbose)
     except KeyboardInterrupt:
         print("\n👋 Transcription ended.")
     except Exception as e:
@@ -140,19 +164,40 @@ def handle_live(args: list) -> None:
 
 
 def handle_live_file(args: list) -> None:
-    """Handle the live_file transcription command (Groq Whisper)."""
-    from src.live_interaction import transcribe_file
+    """Handle the live_file transcription command."""
+    from src.live_interaction import (
+        transcribe_file, 
+        MLX_MODEL_TURBO,
+        MLX_MODEL_MEDIUM,
+        MLX_MODEL_SMALL
+    )
     
     if not args:
-        print("❌ Usage: live_file <audio_file>")
+        print("❌ Usage: live_file <audio_file> [--groq|--mlx] [--turbo|--medium|--small]")
         return
     
     file_path = args[0]
+    backend = "mlx"
+    model = MLX_MODEL_TURBO
+    
+    # Parse options
+    for arg in args[1:]:
+        if arg in ("--groq", "-q"):
+            backend = "groq"
+        elif arg in ("--mlx", "-m"):
+            backend = "mlx"
+        elif arg == "--medium":
+            model = MLX_MODEL_MEDIUM
+        elif arg == "--small":
+            model = MLX_MODEL_SMALL
+        elif arg == "--turbo":
+            model = MLX_MODEL_TURBO
     
     try:
-        result = transcribe_file(file_path)
+        result = transcribe_file(file_path, backend=backend, model=model)
+        backend_name = "Groq Whisper" if backend == "groq" else "MLX Whisper"
         print("\n" + "=" * 60)
-        print("📜 Transcription (Groq Whisper):")
+        print(f"📜 Transcription ({backend_name}):")
         print("=" * 60)
         print(result)
     except FileNotFoundError as e:

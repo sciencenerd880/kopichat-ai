@@ -17,6 +17,7 @@ Features:
 import os
 import io
 import wave
+import time
 import asyncio
 import tempfile
 from typing import Optional, Literal
@@ -131,7 +132,7 @@ def record_chunk(
 # Groq Whisper Transcription
 # ==============================================================================
 
-def transcribe_file(
+def transcribe_file_groq(
     file_path: str,
     model: str = GROQ_MODEL_TURBO,
     language: Optional[str] = None,
@@ -143,7 +144,7 @@ def transcribe_file(
     
     client = get_groq_client()
     
-    print(f"🎵 Transcribing: {file_path}")
+    print(f"🎵 Transcribing (Groq): {file_path}")
     print(f"   Model: {model}")
     
     with open(file_path, "rb") as file:
@@ -250,9 +251,55 @@ def transcribe_audio_bytes_mlx(
         os.unlink(temp_path)
 
 
+def transcribe_file_mlx(
+    file_path: str,
+    model: str = MLX_MODEL_TURBO,
+) -> str:
+    """Transcribe an audio file using MLX Whisper (local)."""
+    import mlx_whisper
+    
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Audio file not found: {file_path}")
+    
+    print(f"🎵 Transcribing (MLX): {file_path}")
+    print(f"   Model: {model}")
+    print("   Running locally on Apple Silicon 🍎")
+    
+    # Pre-load model (cached)
+    get_mlx_model(model)
+    
+    result = mlx_whisper.transcribe(
+        file_path,
+        path_or_hf_repo=model,
+        condition_on_previous_text=False,
+        compression_ratio_threshold=2.4,
+        no_speech_threshold=0.6,
+        hallucination_silence_threshold=0.5,
+    )
+    
+    return result.get("text", "").strip()
+
+
+def transcribe_file(
+    file_path: str,
+    backend: Backend = "mlx",
+    model: Optional[str] = None,
+) -> str:
+    """
+    Transcribe an audio file using the specified backend.
+    """
+    if backend == "mlx":
+        return transcribe_file_mlx(file_path, model=model or MLX_MODEL_TURBO)
+    elif backend == "groq":
+        return transcribe_file_groq(file_path, model=model or GROQ_MODEL_TURBO)
+    else:
+        raise ValueError(f"Backend '{backend}' not supported for file transcription.")
+
+
 def run_mlx_transcription(
     chunk_duration: float = 3.0,  # Shorter chunks for faster response
     model: str = MLX_MODEL_TURBO,
+    verbose: bool = False,
 ) -> None:
     """Run live transcription using MLX Whisper (local, Apple Silicon optimized)."""
     print("\n" + "=" * 60)
@@ -261,6 +308,8 @@ def run_mlx_transcription(
     print(f"   Model: {model}")
     print(f"   Chunk duration: {chunk_duration}s")
     print("   Running locally on Apple Silicon 🍎")
+    if verbose:
+        print("   Verbose mode enabled 🔍")
     print("\n   Speak into your microphone...")
     print("   Press Ctrl+C to stop")
     print("=" * 60 + "\n")
@@ -286,10 +335,15 @@ def run_mlx_transcription(
             print(f"\r{'🔄 Transcribing...':<{max_status_len}}", end="", flush=True)
             
             try:
+                start_t = time.time()
                 text = transcribe_audio_bytes_mlx(audio_data, model=model)
+                end_t = time.time()
                 
                 if text.strip():
-                    print(f"\r{' ' * max_status_len}\r📝 {text.strip()}")
+                    status_line = f"\r{' ' * max_status_len}\r📝 {text.strip()}"
+                    if verbose:
+                        status_line += f" ({end_t - start_t:.2f}s)"
+                    print(status_line)
                 else:
                     print(f"\r{' ' * max_status_len}\r   (silence)")
             except Exception as e:
@@ -303,6 +357,7 @@ def run_groq_transcription(
     chunk_duration: float = 5.0,
     model: str = GROQ_MODEL_TURBO,
     prompt: str = "Transcribe Singlish/Singaporean English accurately.",
+    verbose: bool = False,
 ) -> None:
     """Run live transcription using Groq Whisper."""
     print("\n" + "=" * 60)
@@ -311,6 +366,8 @@ def run_groq_transcription(
     print(f"   Model: {model}")
     print(f"   Chunk duration: {chunk_duration}s")
     print(f"   Prompt: {prompt}")
+    if verbose:
+        print("   Verbose mode enabled 🔍")
     print("\n   Speak into your microphone...")
     print("   Press Ctrl+C to stop")
     print("=" * 60 + "\n")
@@ -335,11 +392,16 @@ def run_groq_transcription(
             print(f"\r{'🔄 Transcribing...':<{max_status_len}}", end="", flush=True)
             
             try:
+                start_t = time.time()
                 text = transcribe_audio_bytes(audio_data, model=model, prompt=prompt)
+                end_t = time.time()
                 
                 # Clear the status line completely and print result
                 if text.strip():
-                    print(f"\r{' ' * max_status_len}\r📝 {text.strip()}")
+                    status_line = f"\r{' ' * max_status_len}\r📝 {text.strip()}"
+                    if verbose:
+                        status_line += f" ({end_t - start_t:.2f}s)"
+                    print(status_line)
                 else:
                     print(f"\r{' ' * max_status_len}\r   (silence)")
             except Exception as e:
@@ -479,6 +541,8 @@ def run_gemini_transcription() -> None:
 def run_live_transcription(
     backend: Backend = DEFAULT_BACKEND,
     chunk_duration: float = 3.0,
+    model: Optional[str] = None,
+    verbose: bool = False,
 ) -> None:
     """
     Run live speech-to-text transcription.
@@ -486,6 +550,8 @@ def run_live_transcription(
     Args:
         backend: Which backend to use ("mlx", "groq", or "gemini")
         chunk_duration: Duration of each recording chunk (for mlx/groq)
+        model: Optional model name override
+        verbose: Whether to show extra debug info
     
     Usage:
         >>> run_live_transcription(backend="mlx")   # Local, Apple Silicon
@@ -493,9 +559,17 @@ def run_live_transcription(
         >>> run_live_transcription(backend="gemini")  # Streaming
     """
     if backend == "mlx":
-        run_mlx_transcription(chunk_duration=chunk_duration)
+        run_mlx_transcription(
+            chunk_duration=chunk_duration, 
+            model=model or MLX_MODEL_TURBO,
+            verbose=verbose
+        )
     elif backend == "groq":
-        run_groq_transcription(chunk_duration=chunk_duration)
+        run_groq_transcription(
+            chunk_duration=chunk_duration, 
+            model=model or GROQ_MODEL_TURBO,
+            verbose=verbose
+        )
     elif backend == "gemini":
         run_gemini_transcription()
     else:
