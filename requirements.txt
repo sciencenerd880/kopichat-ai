@@ -1,0 +1,15 @@
+# kopichat-ai Dependencies
+# ========================
+# Install with: pip install -r requirements.txt
+# Or with uv: uv pip install -r requirements.txt
+
+# Google Gemini API SDK (latest)
+google-genai>=1.0.0
+
+# Audio I/O for real-time voice interaction
+pyaudio>=0.2.14
+
+# Note: asyncio is part of Python standard library (no install needed)
+
+# Optional: If you want to use pvrecorder as an alternative
+# pvrecorder>=1.2.0
